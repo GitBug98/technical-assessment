@@ -109,7 +109,15 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         book.available_copies -= 1
         book.save()
         send_borrowing_confirmation_email.delay(user.email, book.title)
-        
+        channel_layer = get_channel_layer()
+
+        async_to_sync(channel_layer.group_send)(
+                f"user_{user.id}",
+                {
+                    "type": "notify",
+                    "data":  f"Book '{book.title}' has been borrowed successfully."
+                }
+            )        
 
         serializer.save(user=user)
 
