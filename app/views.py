@@ -108,6 +108,8 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         # Decrease available copies when borrowed
         book.available_copies -= 1
         book.save()
+        send_borrowing_confirmation_email.delay(user.email, book.title)
+        
 
         serializer.save(user=user)
 
